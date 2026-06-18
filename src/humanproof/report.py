@@ -12,8 +12,8 @@ def print_score(score: MotorScore, console: Any = None) -> None:
     """Print a MotorScore to the terminal using Rich."""
     try:
         from rich.console import Console
-        from rich.table import Table
         from rich.panel import Panel
+        from rich.table import Table
 
         c = console or Console()
 

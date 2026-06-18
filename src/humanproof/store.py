@@ -7,9 +7,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from humanproof.scorer import MotorFeatures, MotorScore
 from humanproof.trajectory import InputTrajectory
-from humanproof.scorer import MotorScore, MotorFeatures
-
 
 _DEFAULT_DB = Path.home() / ".humanproof" / "store.db"
 

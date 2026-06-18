@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-import pytest
-from humanproof.scorer import MotorFeatures, MotorScore
+
 from humanproof.report import print_score, to_json, to_markdown
+from humanproof.scorer import MotorFeatures, MotorScore
 
 
 def make_score(
@@ -88,8 +88,9 @@ def test_to_markdown_shows_flags() -> None:
 
 
 def test_print_score_runs_without_error() -> None:
-    from rich.console import Console
     from io import StringIO
+
+    from rich.console import Console
     buf = StringIO()
     c = Console(file=buf, highlight=False)
     score = make_score()
@@ -99,8 +100,9 @@ def test_print_score_runs_without_error() -> None:
 
 
 def test_print_score_ai_verdict() -> None:
-    from rich.console import Console
     from io import StringIO
+
+    from rich.console import Console
     buf = StringIO()
     c = Console(file=buf, highlight=False)
     score = make_score("ai_traj", "ai", 0.1)

@@ -5,9 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from humanproof.trajectory import InputSample, InputTrajectory
+
 from humanproof.scorer import MotorScorer
 from humanproof.store import HumanproofStore
+from humanproof.trajectory import InputSample, InputTrajectory
 
 
 def make_traj(session_id: str = "test") -> InputTrajectory:

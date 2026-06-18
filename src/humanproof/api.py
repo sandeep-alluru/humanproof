@@ -11,7 +11,6 @@ from typing import Any
 
 try:
     from fastapi import FastAPI, HTTPException
-    from pydantic import BaseModel
 except ImportError as exc:
     raise ImportError("API server requires: pip install 'humanproof[api]'") from exc
 

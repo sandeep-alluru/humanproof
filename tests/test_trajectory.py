@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import pytest
+
 from humanproof.trajectory import InputSample, InputTrajectory
 
 
-def make_samples(n: int = 5, dx: float = 1.0, dy: float = 1.0, dt: float = 10.0) -> list[InputSample]:
+def make_samples(
+    n: int = 5, dx: float = 1.0, dy: float = 1.0, dt: float = 10.0
+) -> list[InputSample]:
     return [InputSample(dx=dx, dy=dy, dt=dt) for _ in range(n)]
 
 

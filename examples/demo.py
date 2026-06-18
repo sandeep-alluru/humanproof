@@ -9,9 +9,9 @@ from pathlib import Path
 # Allow running from repo root without install
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from humanproof.trajectory import InputSample, InputTrajectory
-from humanproof.scorer import MotorScorer
 from humanproof.report import print_score, to_json
+from humanproof.scorer import MotorScorer
+from humanproof.trajectory import InputSample, InputTrajectory
 
 
 def make_ai_trajectory() -> InputTrajectory:
@@ -24,10 +24,10 @@ def make_human_trajectory() -> InputTrajectory:
     """Simulate a human: noisy with direction corrections."""
     random.seed(123)
     samples = []
-    for i in range(30):
+    for _i in range(30):
         dx = random.gauss(4.0, 2.5)
         dy = random.gauss(3.0, 2.0)
-        dt = random.uniform(8.0, 14.0)
+        dt = random.uniform(8.0, 14.0)  # noqa: S311
         samples.append(InputSample(dx=dx, dy=dy, dt=dt))
     # Add some corrections
     for idx in [7, 14, 22]:

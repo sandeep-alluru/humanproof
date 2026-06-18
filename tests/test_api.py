@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 try:
-    from fastapi.testclient import TestClient
     import fastapi  # noqa: F401
+    from fastapi.testclient import TestClient
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
@@ -19,7 +19,9 @@ def get_client():
     return TestClient(app)
 
 
-def make_trajectory_dict(n: int = 10, dx: float = 1.0, dy: float = 1.0, session_id: str = "api_test") -> dict:
+def make_trajectory_dict(
+    n: int = 10, dx: float = 1.0, dy: float = 1.0, session_id: str = "api_test"
+) -> dict:
     return {
         "session_id": session_id,
         "samples": [{"dx": dx, "dy": dy, "dt": 10.0} for _ in range(n)],

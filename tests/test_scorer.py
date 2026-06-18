@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-from humanproof.trajectory import InputSample, InputTrajectory
 from humanproof.scorer import MotorFeatures, MotorScore, MotorScorer
+from humanproof.trajectory import InputSample, InputTrajectory
 
 
 def make_ai_traj() -> InputTrajectory:
@@ -18,7 +17,7 @@ def make_human_traj() -> InputTrajectory:
     import random
     random.seed(42)
     samples = []
-    for i in range(20):
+    for _i in range(20):
         dx = random.gauss(3.0, 2.0)
         dy = random.gauss(3.0, 2.0)
         dt = 10.0

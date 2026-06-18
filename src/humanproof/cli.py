@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
-from typing import Any
 
 import click
 from rich.console import Console
 
 from humanproof import __version__
+from humanproof import report as rpt
 from humanproof.scorer import MotorScorer
 from humanproof.store import HumanproofStore
 from humanproof.trajectory import InputTrajectory
-from humanproof import report as rpt
 
 console = Console()
 
@@ -64,7 +62,7 @@ def batch(directory: str, db: str | None) -> None:
             rpt.print_score(result, console=console)
             store.save_trajectory(traj)
             store.save_score(result)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             console.print(f"[red]Error processing {f.name}: {e}[/red]")
     store.close()
     console.print(f"\n[bold]Scored {len(results)} trajectories.[/bold]")
