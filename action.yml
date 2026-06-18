@@ -42,7 +42,7 @@ runs:
 
     - name: Install humanproof
       shell: bash
-      run: pip install "humanproof==0.1.0" -q
+      run: pip install -e "${{ github.action_path }}" -q
 
     - name: Score trajectory file
       if: inputs.trajectory-file != ''

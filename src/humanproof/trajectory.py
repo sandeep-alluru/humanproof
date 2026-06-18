@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 from dataclasses import dataclass, field
 from typing import Any
@@ -48,10 +49,14 @@ class InputTrajectory:
             raise ValueError("samples must not be empty")
         first = self.samples[0]
         last = self.samples[-1]
-        payload = (
-            f"{self.session_id}{len(self.samples)}"
-            f"{first.dx}{first.dy}{first.dt}{first.timestamp}"
-            f"{last.dx}{last.dy}{last.dt}{last.timestamp}"
+        payload = json.dumps(
+            [
+                self.session_id,
+                len(self.samples),
+                {"dx": first.dx, "dy": first.dy, "dt": first.dt, "ts": first.timestamp},
+                {"dx": last.dx, "dy": last.dy, "dt": last.dt, "ts": last.timestamp},
+            ],
+            sort_keys=True,
         )
         self.id = hashlib.sha256(payload.encode()).hexdigest()[:16]
 
