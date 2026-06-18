@@ -1,0 +1,59 @@
+name: 'humanproof'
+description: 'Motor-noise fingerprinting to detect AI vs human input in competitive games'
+author: 'Sandeep Alluru'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  trajectory-file:
+    description: 'Path to the JSON trajectory file to score'
+    required: false
+    default: ''
+  trajectory-dir:
+    description: 'Path to a directory of JSON trajectory files to batch score'
+    required: false
+    default: ''
+  db-path:
+    description: 'Path to the SQLite store database'
+    required: false
+    default: ''
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.12'
+
+outputs:
+  verdict:
+    description: 'Verdict for single trajectory: human, ai, or uncertain'
+  human-score:
+    description: 'Human probability score [0.0, 1.0]'
+  ai-score:
+    description: 'AI probability score [0.0, 1.0]'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install humanproof
+      shell: bash
+      run: pip install "humanproof==0.1.0" -q
+
+    - name: Score trajectory file
+      if: inputs.trajectory-file != ''
+      shell: bash
+      run: |
+        humanproof score "${{ inputs.trajectory-file }}" \
+          ${{ inputs.db-path != '' && format('--db {0}', inputs.db-path) || '' }}
+
+    - name: Batch score trajectory directory
+      if: inputs.trajectory-dir != ''
+      shell: bash
+      run: |
+        humanproof batch "${{ inputs.trajectory-dir }}" \
+          ${{ inputs.db-path != '' && format('--db {0}', inputs.db-path) || '' }}
