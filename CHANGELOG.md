@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `BatchScoreResult` dataclass and `batch_score()` function for scoring multiple trajectories at once
+- `score_from_csv()` for loading and scoring trajectories from a CSV file (columns: trajectory_id,t,x,y,button)
+- `SessionAnalysis` dataclass and `analyze_session()` for temporal behavioral analysis of gaming sessions
+- `detect_shift()` for detecting aimbot-style behavioral changes across a sequence of trajectories
+- `CalibrationResult` dataclass, `calibrate()` for grid-search threshold optimization from labeled examples
+- `apply_calibration()` to produce a calibrated `MotorScorer` from a `CalibrationResult`
+- CLI commands: `humanproof batch-csv <csv_file>` and `humanproof session <csv_file>`
+- Tests: `tests/test_batch.py`, `tests/test_session.py`, `tests/test_calibration.py`
+
 ## [0.1.0] - 2026-06-18
 
 ### Added
