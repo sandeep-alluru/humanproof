@@ -19,32 +19,30 @@ import json
 import sys
 from typing import Any
 
+try:
+    import mcp.server.stdio as _mcp_stdio
+    import mcp.types as _mcp_types
+    from mcp.server import Server as _Server
+    _HAS_MCP = True
+except ImportError:
+    _HAS_MCP = False
 
-def _require_mcp() -> Any:
-    try:
-        import mcp.server.stdio
-        import mcp.types as types
-        from mcp.server import Server as _Server
 
-        return mcp, types, _Server
-    except ImportError:
+def run_server() -> None:
+    """Start the MCP server on stdio."""
+    if not _HAS_MCP:
         print(
             "MCP server requires: pip install 'humanproof[mcp]'",
             file=sys.stderr,
         )
         sys.exit(1)
 
-
-def run_server() -> None:
-    """Start the MCP server on stdio."""
-    mcp_mod, types, server_cls = _require_mcp()
-
-    server = server_cls("humanproof")
+    server = _Server("humanproof")
 
     @server.list_tools()
-    async def list_tools() -> list[types.Tool]:
+    async def list_tools() -> list[_mcp_types.Tool]:
         return [
-            types.Tool(
+            _mcp_types.Tool(
                 name="score_trajectory",
                 description="Score a single input trajectory for human vs AI likelihood.",
                 inputSchema={
@@ -58,7 +56,7 @@ def run_server() -> None:
                     "required": ["trajectory_dict"],
                 },
             ),
-            types.Tool(
+            _mcp_types.Tool(
                 name="batch_score",
                 description="Score multiple input trajectories.",
                 inputSchema={
@@ -72,7 +70,7 @@ def run_server() -> None:
                     "required": ["trajectory_dicts"],
                 },
             ),
-            types.Tool(
+            _mcp_types.Tool(
                 name="list_scores",
                 description="List all stored scores from the humanproof store.",
                 inputSchema={"type": "object", "properties": {}},
@@ -82,7 +80,7 @@ def run_server() -> None:
     @server.call_tool()
     async def call_tool(
         name: str, arguments: dict[str, Any]
-    ) -> list[types.TextContent]:
+    ) -> list[_mcp_types.TextContent]:
         from humanproof.scorer import MotorScorer
         from humanproof.store import HumanproofStore
         from humanproof.trajectory import InputTrajectory
@@ -94,7 +92,7 @@ def run_server() -> None:
             traj = InputTrajectory.from_dict(arguments["trajectory_dict"])
             result = scorer.score(traj)
             store.save_score(result)
-            return [types.TextContent(type="text", text=json.dumps(result.to_dict()))]
+            return [_mcp_types.TextContent(type="text", text=json.dumps(result.to_dict()))]
         elif name == "batch_score":
             results = []
             for td in arguments["trajectory_dicts"]:
@@ -102,17 +100,17 @@ def run_server() -> None:
                 result = scorer.score(traj)
                 store.save_score(result)
                 results.append(result.to_dict())
-            return [types.TextContent(type="text", text=json.dumps(results))]
+            return [_mcp_types.TextContent(type="text", text=json.dumps(results))]
         elif name == "list_scores":
             scores = [s.to_dict() for s in store.list_scores()]
-            return [types.TextContent(type="text", text=json.dumps(scores))]
+            return [_mcp_types.TextContent(type="text", text=json.dumps(scores))]
         else:
             raise ValueError(f"Unknown tool: {name}")
 
     import asyncio
 
     async def _main() -> None:
-        async with mcp_mod.server.stdio.stdio_server() as (read_stream, write_stream):
+        async with _mcp_stdio.stdio_server() as (read_stream, write_stream):
             await server.run(
                 read_stream, write_stream, server.create_initialization_options()
             )

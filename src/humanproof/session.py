@@ -54,6 +54,8 @@ def detect_shift(scores: list[float], window: int = 3, threshold: float = 0.3) -
 
 def analyze_session(session_id: str, trajectories: list[InputTrajectory]) -> SessionAnalysis:
     """Analyze a gaming session consisting of multiple trajectories."""
+    if not trajectories:
+        raise ValueError("trajectories must not be empty")
     scorer = MotorScorer()
     result = batch_score(trajectories, scorer=scorer)
 
@@ -75,7 +77,7 @@ def analyze_session(session_id: str, trajectories: list[InputTrajectory]) -> Ses
         verdict = "consistent_ai"
         risk_level = "high"
     else:
-        verdict = "consistent_human"
+        verdict = "uncertain"
         risk_level = "medium"
 
     return SessionAnalysis(

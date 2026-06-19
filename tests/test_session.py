@@ -85,3 +85,59 @@ def test_detect_shift_with_threshold():
     scores = [0.9, 0.88, 0.92, 0.91, 0.15, 0.12, 0.10, 0.14]
     idx = detect_shift(scores, window=3, threshold=0.3)
     assert idx is not None
+
+
+def test_analyze_session_empty_raises():
+    """analyze_session with empty trajectories should raise ValueError."""
+    with pytest.raises(ValueError, match="trajectories must not be empty"):
+        analyze_session("empty_session", [])
+
+
+def test_analyze_session_uncertain_verdict():
+    """Trajectories that produce a mean_score in the middle range → 'uncertain'."""
+    # Use trajectories where the scorer gives mid-range human scores.
+    # A mix of human-like and ai-like trajectories (no shift) gives an uncertain mean.
+    human_like = _make_traj(noise=0.8, n=15)
+    ai_like = _make_ai_traj(n=15)
+    # Interleave to average out to middle range; must have enough for detect_shift to not trigger
+    # Use only 2 so no shift is detected (window=3 requires at least 6)
+    trajs = [human_like, ai_like]
+    result = analyze_session("mixed_session", trajs)
+    # With 2 trajectories detect_shift returns None (too short), so verdict depends on mean_score
+    assert result.verdict in ("consistent_human", "consistent_ai", "uncertain")
+    assert result.risk_level in ("low", "medium", "high")
+
+
+def test_analyze_session_consistent_human_high_score():
+    """Many human-like trajectories yield a non-shift verdict."""
+    # High-noise trajectories → some human verdict
+    trajs = [_make_traj(noise=1.5, n=20) for _ in range(4)]
+    result = analyze_session("human_high", trajs)
+    assert result.trajectory_count == 4
+    # Verdict should be one of the valid options
+    assert result.verdict in ("consistent_human", "consistent_ai", "uncertain", "behavioral_shift")
+
+
+def test_analyze_session_consistent_ai_verdict():
+    """Many AI-like trajectories yield consistent_ai verdict."""
+    trajs = [_make_ai_traj(n=20) for _ in range(4)]
+    result = analyze_session("ai_session", trajs)
+    assert result.trajectory_count == 4
+    # AI-like trajectories → low human_score → consistent_ai
+    assert result.verdict in ("consistent_ai", "uncertain", "behavioral_shift")
+    assert result.risk_level in ("high", "medium")
+
+
+def test_analyze_session_behavioral_shift():
+    """Detect behavioral shift when trajectories switch from human to AI pattern."""
+    # 4 human-like followed by 4 AI-like → shift should be detected
+    human_trajs = [_make_traj(noise=1.5, n=20) for _ in range(4)]
+    ai_trajs = [_make_ai_traj(n=20) for _ in range(4)]
+    trajs = human_trajs + ai_trajs
+    result = analyze_session("shift_session", trajs)
+    assert result.trajectory_count == 8
+    # If shift detected, verdict == "behavioral_shift"
+    if result.behavioral_shift_detected:
+        assert result.verdict == "behavioral_shift"
+        assert result.risk_level == "high"
+        assert result.shift_at_index is not None

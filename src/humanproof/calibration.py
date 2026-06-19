@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from humanproof.scorer import MotorScorer
+from humanproof.scorer import MotorScore, MotorScorer
 from humanproof.trajectory import InputTrajectory
 
 
@@ -131,50 +131,50 @@ def calibrate(
     )
 
 
-def apply_calibration(scorer: MotorScorer, calibration: CalibrationResult) -> MotorScorer:
-    """Return a new MotorScorer with calibrated thresholds patched in."""
-    import types
+class CalibratedMotorScorer(MotorScorer):
+    """A MotorScorer with calibrated thresholds from labeled examples."""
 
-    new_scorer = MotorScorer()
-    noise_threshold = calibration.optimal_noise_threshold
-    correction_threshold = calibration.optimal_correction_threshold
+    def __init__(
+        self,
+        noise_threshold: float,
+        correction_threshold: float,
+    ) -> None:
+        super().__init__()
+        self._noise_threshold = noise_threshold
+        self._correction_threshold = correction_threshold
 
-    def _calibrated_score(self, traj: InputTrajectory):  # type: ignore[override]
-        from humanproof.scorer import MotorScore
-        features = self.extract_features(traj)
-        flags = []
-        human_score = 0.5
-        if features.noise_ratio < noise_threshold:
-            flags.append("low_noise_ratio")
-            human_score -= 0.2
-        elif features.noise_ratio > noise_threshold * 2:
-            human_score += 0.2
-        if features.correction_rate < correction_threshold:
-            flags.append("low_correction_rate")
-            human_score -= 0.15
-        elif features.correction_rate > correction_threshold * 2:
-            human_score += 0.15
-        if features.smoothness > 8.0:
-            flags.append("high_smoothness")
-            human_score -= 0.15
-        elif features.smoothness < 5.0:
-            human_score += 0.15
-        human_score = max(0.0, min(1.0, human_score))
-        ai_score = 1.0 - human_score
-        if human_score > 0.65:
+    def score(self, trajectory: InputTrajectory) -> MotorScore:
+        base = super().score(trajectory)
+        # Recompute verdict using calibrated thresholds
+        is_human = (
+            base.features.noise_ratio >= self._noise_threshold
+            and base.features.correction_rate >= self._correction_threshold
+        )
+        if is_human:
             verdict = "human"
-        elif human_score < 0.35:
+            human_score = min(1.0, base.human_score * 1.1)
+        elif (
+            base.features.noise_ratio < self._noise_threshold * 0.5
+            and base.features.correction_rate < self._correction_threshold * 0.5
+        ):
             verdict = "ai"
+            human_score = max(0.0, base.human_score * 0.9)
         else:
-            verdict = "uncertain"
+            verdict = base.verdict
+            human_score = base.human_score
         return MotorScore(
-            trajectory_id=traj.id,
-            features=features,
+            trajectory_id=base.trajectory_id,
+            features=base.features,
             human_score=human_score,
-            ai_score=ai_score,
+            ai_score=1.0 - human_score,
             verdict=verdict,
-            flags=flags,
+            flags=base.flags,
         )
 
-    new_scorer.score = types.MethodType(_calibrated_score, new_scorer)
-    return new_scorer
+
+def apply_calibration(scorer: MotorScorer, calibration: CalibrationResult) -> CalibratedMotorScorer:
+    """Return a CalibratedMotorScorer with calibrated thresholds."""
+    return CalibratedMotorScorer(
+        calibration.optimal_noise_threshold,
+        calibration.optimal_correction_threshold,
+    )

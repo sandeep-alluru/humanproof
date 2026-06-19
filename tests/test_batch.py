@@ -84,3 +84,19 @@ def test_score_from_csv_single_row_trajectory(tmp_path: Path):
     result = score_from_csv(csv_file)
     # only 'good' trajectory should be scored
     assert len(result.scores) == 1
+
+
+def test_score_from_csv_zero_dt_fallback(tmp_path: Path):
+    """When two rows have the same timestamp, dt would be 0; should fall back to dt=1.0."""
+    csv_file = tmp_path / "zerodt.csv"
+    with csv_file.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["trajectory_id", "t", "x", "y", "button"])
+        writer.writeheader()
+        # Same timestamp for two rows → dt = 0 → should be clamped to 1.0
+        writer.writerow({"trajectory_id": "dup_t", "t": 0, "x": 0.0, "y": 0.0, "button": 0})
+        writer.writerow({"trajectory_id": "dup_t", "t": 0, "x": 1.0, "y": 1.0, "button": 0})
+        # Also add a normal row so the trajectory is valid
+        writer.writerow({"trajectory_id": "dup_t", "t": 10, "x": 2.0, "y": 2.0, "button": 0})
+    result = score_from_csv(csv_file)
+    assert isinstance(result, BatchScoreResult)
+    assert len(result.scores) == 1
