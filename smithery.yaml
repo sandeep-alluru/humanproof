@@ -1,0 +1,19 @@
+name: humanproof
+displayName: "Humanproof"
+description: "Motor-noise fingerprinting — distinguish human from bot by mouse trajectory alone"
+license: MIT
+homepage: https://github.com/sandeep-alluru/humanproof
+repository: https://github.com/sandeep-alluru/humanproof
+keywords:
+  - ai-agents
+  - bot-detection
+  - fingerprinting
+  - mcp
+  - security
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+  commandFunction: |-
+    (config) => ({ command: "python", args: ["-m", "humanproof.mcp_server"] })
