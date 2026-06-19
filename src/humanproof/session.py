@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from humanproof.batch import batch_score
 from humanproof.scorer import MotorScorer
@@ -14,13 +15,13 @@ class SessionAnalysis:
     session_id: str
     trajectory_count: int
     mean_human_score: float
-    score_over_time: list[tuple[int, float]]   # (trajectory_index, human_score)
+    score_over_time: list[tuple[int, float]]  # (trajectory_index, human_score)
     behavioral_shift_detected: bool
-    shift_at_index: int | None   # where the score changed significantly
-    verdict: str   # "consistent_human", "consistent_ai", "behavioral_shift"
+    shift_at_index: int | None  # where the score changed significantly
+    verdict: str  # "consistent_human", "consistent_ai", "behavioral_shift"
     risk_level: str  # "low", "medium", "high"
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "session_id": self.session_id,
             "trajectory_count": self.trajectory_count,

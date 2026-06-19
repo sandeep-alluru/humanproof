@@ -102,8 +102,7 @@ class MotorScorer:
         abs_jerks = [abs(j) for j in jp]
         jerk_mean = sum(abs_jerks) / len(abs_jerks) if abs_jerks else 0.0
         jerk_variance = (
-            sum((j - jerk_mean) ** 2 for j in abs_jerks) / len(abs_jerks)
-            if abs_jerks else 0.0
+            sum((j - jerk_mean) ** 2 for j in abs_jerks) / len(abs_jerks) if abs_jerks else 0.0
         )
         jerk_std = math.sqrt(jerk_variance)
         smoothness = 1.0 / (jerk_mean + 1e-9)

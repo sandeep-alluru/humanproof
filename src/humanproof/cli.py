@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import click
 from rich.console import Console
@@ -120,7 +121,7 @@ def session_cmd(csv_file: str, session_id: str) -> None:
     from humanproof.session import analyze_session
     from humanproof.trajectory import InputSample, InputTrajectory
 
-    rows_by_id: dict[str, list[dict]] = {}
+    rows_by_id: dict[str, list[dict[str, Any]]] = {}
     with open(csv_file, newline="") as f:
         reader = _csv.DictReader(f)
         for row in reader:

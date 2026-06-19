@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from humanproof.scorer import MotorScore, MotorScorer
 from humanproof.trajectory import InputTrajectory
@@ -16,7 +17,7 @@ class CalibrationResult:
     human_precision: float
     ai_precision: float
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "optimal_noise_threshold": self.optimal_noise_threshold,
             "optimal_correction_threshold": self.optimal_correction_threshold,

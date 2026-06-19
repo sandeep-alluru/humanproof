@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from humanproof.scorer import MotorScore, MotorScorer
 from humanproof.trajectory import InputSample, InputTrajectory
@@ -17,10 +18,10 @@ class BatchScoreResult:
     ai_count: int
     uncertain_count: int
     mean_human_score: float
-    flagged_trajectories: list[str]   # IDs where verdict == "ai"
+    flagged_trajectories: list[str]  # IDs where verdict == "ai"
     summary: str
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "human_count": self.human_count,
             "ai_count": self.ai_count,
@@ -68,7 +69,7 @@ def score_from_csv(csv_path: Path) -> BatchScoreResult:
     button column is ignored (reserved for future use).
     """
     csv_path = Path(csv_path)
-    rows_by_id: dict[str, list[dict]] = {}
+    rows_by_id: dict[str, list[dict[str, Any]]] = {}
     with csv_path.open(newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:

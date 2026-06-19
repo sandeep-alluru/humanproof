@@ -62,10 +62,7 @@ class InputTrajectory:
 
     def velocity_profile(self) -> list[float]:
         """Compute speed at each sample step (pixels/ms)."""
-        return [
-            math.sqrt(s.dx**2 + s.dy**2) / s.dt
-            for s in self.samples
-        ]
+        return [math.sqrt(s.dx**2 + s.dy**2) / s.dt for s in self.samples]
 
     def acceleration_profile(self) -> list[float]:
         """Compute acceleration at each step (pixels/ms^2). Length = n-1."""
@@ -83,10 +80,8 @@ class InputTrajectory:
         for i in range(1, len(self.samples)):
             prev = self.samples[i - 1]
             curr = self.samples[i]
-            x_flip = (prev.dx != 0 and curr.dx != 0 and
-                      (prev.dx > 0) != (curr.dx > 0))
-            y_flip = (prev.dy != 0 and curr.dy != 0 and
-                      (prev.dy > 0) != (curr.dy > 0))
+            x_flip = prev.dx != 0 and curr.dx != 0 and (prev.dx > 0) != (curr.dx > 0)
+            y_flip = prev.dy != 0 and curr.dy != 0 and (prev.dy > 0) != (curr.dy > 0)
             if x_flip or y_flip:
                 count += 1
         return count
@@ -108,8 +103,7 @@ class InputTrajectory:
         return {
             "session_id": self.session_id,
             "samples": [
-                {"dx": s.dx, "dy": s.dy, "dt": s.dt, "timestamp": s.timestamp}
-                for s in self.samples
+                {"dx": s.dx, "dy": s.dy, "dt": s.dt, "timestamp": s.timestamp} for s in self.samples
             ],
         }
 

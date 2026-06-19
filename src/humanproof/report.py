@@ -23,11 +23,13 @@ def print_score(score: MotorScore, console: Any = None) -> None:
             "uncertain": "yellow",
         }.get(score.verdict, "white")
 
-        c.print(Panel(
-            f"[bold {color}]{score.verdict.upper()}[/bold {color}]  "
-            f"human={score.human_score:.2f}  ai={score.ai_score:.2f}",
-            title=f"[bold]humanproof[/bold] · {score.trajectory_id}",
-        ))
+        c.print(
+            Panel(
+                f"[bold {color}]{score.verdict.upper()}[/bold {color}]  "
+                f"human={score.human_score:.2f}  ai={score.ai_score:.2f}",
+                title=f"[bold]humanproof[/bold] · {score.trajectory_id}",
+            )
+        )
 
         t = Table(show_header=True, header_style="bold cyan")
         t.add_column("Feature", style="dim")
