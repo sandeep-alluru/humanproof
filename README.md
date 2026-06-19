@@ -36,7 +36,7 @@ graph LR
 
 | Feature | Description |
 |---|---|
-| Zero dependencies | Pure Python stdlib — no numpy, no scikit-learn |
+| Minimal dependencies (click, rich only) | No numpy, no scikit-learn — just two lightweight CLI/display packages |
 | No training data | Threshold-based heuristics, works out of the box |
 | Multiple interfaces | CLI, FastAPI REST server, MCP for Claude |
 | SQLite persistence | Stores trajectories and scores locally |
@@ -54,6 +54,11 @@ Key discriminating features:
 | `smoothness` (1/mean_jerk) | < 5.0 | > 8.0 |
 
 ## Install
+
+> **Note:** PyPI publication is pending. Install directly from GitHub:
+> ```bash
+> pip install git+https://github.com/sandeep-alluru/humanproof.git
+> ```
 
 ```bash
 pip install humanproof
@@ -79,6 +84,8 @@ print(result.verdict, result.human_score)
 |---|---|
 | `humanproof score <file>` | Score a single JSON trajectory file |
 | `humanproof batch <dir>` | Score all JSON files in a directory |
+| `humanproof batch-csv <csv>` | Score trajectories from a CSV file (columns: trajectory_id, t, x, y, button) |
+| `humanproof session <csv>` | Analyze a session CSV for behavioral shifts across trajectories |
 | `humanproof log` | List all stored scores |
 | `humanproof status` | Show count of stored data |
 
@@ -161,7 +168,11 @@ humanproof/
 │   ├── api.py            # FastAPI server
 │   └── mcp_server.py     # MCP server
 ├── tests/                # 77 pytest tests, 95% coverage
-├── examples/demo.py      # end-to-end demo
+├── examples/
+│   ├── demo.py                          # end-to-end demo
+│   ├── game_anticheat.py                # game anti-cheat integration example
+│   ├── esports_integrity_monitor.py     # esports session integrity monitor
+│   └── claude_computer_use_detection.py # Claude computer-use AI detection
 ├── docs/                 # 11-page MkDocs site
 └── tools/openai-tools.json
 ```

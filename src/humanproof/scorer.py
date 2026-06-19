@@ -148,7 +148,7 @@ class MotorScorer:
 
         # Clamp
         human_score = max(0.0, min(1.0, human_score))
-        ai_score = 1.0 - human_score
+        ai_score = round(1.0 - human_score, 2)
 
         if human_score > 0.65:
             verdict = "human"
