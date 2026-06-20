@@ -183,6 +183,49 @@ humanproof/
 
 > Add topics to this repo: `gaming` `anti-cheat` `motor-fingerprinting` `ai-detection` `python`
 
+## Real-World Scenario
+
+**Esports: Detecting AI Aimbot in Tournament Play**
+
+A tournament operator reviews replay data for a suspected aimbot. The player's mouse trajectory is unnaturally smooth — no micro-corrections, no velocity variance. humanproof flags it in under 100ms with no ML model required:
+
+```python
+from humanproof import InputSample, InputTrajectory, MotorScorer
+
+# Human player trajectory — realistic noise, varied timing (dt 8–12ms)
+human_deltas = [
+    (3.1, 2.4, 9.0), (-1.2, 3.8, 11.0), (4.7, -0.9, 8.0), (2.3, 5.1, 10.0),
+    (-0.8, 2.7, 12.0), (5.2, -1.4, 9.0), (1.9, 4.3, 10.0), (-2.6, 0.8, 8.0),
+    (3.8, -3.1, 11.0), (0.4, 6.2, 9.0), (-1.7, 2.9, 10.0), (4.1, 0.3, 12.0),
+    (2.8, -2.2, 8.0), (-0.5, 4.8, 10.0), (3.4, 1.7, 9.0), (1.1, -3.6, 11.0),
+    (5.0, 2.1, 10.0), (-2.9, 3.5, 8.0), (0.7, -1.8, 12.0), (4.4, 2.6, 9.0),
+]
+human_samples = [InputSample(dx=dx, dy=dy, dt=dt) for dx, dy, dt in human_deltas]
+
+# AI bot trajectory — unnaturally smooth, perfectly consistent timing (dt=16ms exactly)
+bot_deltas = [
+    (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0),
+    (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0),
+    (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0),
+    (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0),
+    (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0), (2.0, 2.0, 16.0),
+]
+bot_samples = [InputSample(dx=dx, dy=dy, dt=dt) for dx, dy, dt in bot_deltas]
+
+scorer = MotorScorer()
+
+human_result = scorer.score(InputTrajectory(samples=human_samples))
+bot_result   = scorer.score(InputTrajectory(samples=bot_samples))
+
+print(f"[Player]  verdict={human_result.verdict}  human_score={human_result.human_score:.2f}  ai_score={human_result.ai_score:.2f}")
+print(f"[Bot]     verdict={bot_result.verdict}  human_score={bot_result.human_score:.2f}  ai_score={bot_result.ai_score:.2f}")
+
+if bot_result.verdict == "AI":
+    print("\nFLAGGED: Suspected aimbot detected — trajectory referred to tournament integrity committee.")
+```
+
+**What this catches that traditional anti-cheat misses:** Memory scanners require OS-level access and are bypassed by external AI controllers. humanproof works on replay data alone — usable post-match for dispute resolution, with no kernel driver required.
+
 ## Case Studies
 
 See how teams are using humanproof in production:
