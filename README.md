@@ -233,6 +233,12 @@ See how teams are using humanproof in production:
 - [Behavioral Anti-Cheat for Competitive Esports](docs/case-studies/gaming-anticheat-esports.md) — IronLadder detects 847 cheaters in 30 days with 0.3% false positive rate
 - [Separating Real Users from AI Agents in Web Analytics](docs/case-studies/web-bot-detection-saas.md) — Veridian Analytics quarantines 94% of bot traffic across 500 e-commerce clients
 
+---
+
+## Stay Updated
+
+Subscribe to [**The Silence Layer**](https://newsletter.salluru.dev) — weekly dispatches on production AI infrastructure, new releases, and the failure modes that production AI systems don't surface until it's too late.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
