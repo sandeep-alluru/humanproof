@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "humanproof"
-version = "0.1.1"
+version = "0.1.2"
 description = "Motor-noise fingerprinting for AI detection in competitive games"
 readme = "README.md"
 license = { file = "LICENSE" }

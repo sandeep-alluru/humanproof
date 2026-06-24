@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.sandeep-alluru/humanproof",
+  "title": "HumanProof",
+  "description": "Motor-noise fingerprinting for AI detection in competitive games",
+  "version": "0.1.2",
+  "websiteUrl": "https://github.com/sandeep-alluru/humanproof",
+  "repository": {
+    "url": "https://github.com/sandeep-alluru/humanproof",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "humanproof",
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
