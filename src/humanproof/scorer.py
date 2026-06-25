@@ -166,5 +166,12 @@ class MotorScorer:
         )
 
     def batch_score(self, trajs: list[InputTrajectory]) -> list[MotorScore]:
-        """Score multiple trajectories."""
+        """Score multiple trajectories and return one MotorScore per trajectory.
+
+        Args:
+            trajs: List of InputTrajectory objects to score.
+
+        Returns:
+            List of MotorScore objects in the same order as *trajs*.
+        """
         return [self.score(t) for t in trajs]
