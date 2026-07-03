@@ -242,3 +242,5 @@ Subscribe to [**The Silence Layer**](https://newsletter.salluru.dev) — weekly 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+<!-- mcp-name: io.github.sandeep-alluru/humanproof -->
