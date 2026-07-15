@@ -7,6 +7,7 @@ import pytest
 try:
     import fastapi  # noqa: F401
     from fastapi.testclient import TestClient
+
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
@@ -16,6 +17,7 @@ pytestmark = pytest.mark.skipif(not HAS_FASTAPI, reason="FastAPI not installed")
 
 def get_client():
     from humanproof.api import app
+
     return TestClient(app)
 
 

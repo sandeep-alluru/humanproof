@@ -1,4 +1,5 @@
 """Tests for humanproof.session module."""
+
 import math
 
 import pytest
@@ -22,10 +23,7 @@ def _make_traj(noise: float = 0.5, n: int = 15, session_id: str = "s") -> InputT
 
 def _make_ai_traj(n: int = 15) -> InputTrajectory:
     """Very smooth, low-noise trajectory (AI-like)."""
-    samples = [
-        InputSample(dx=1.0, dy=0.5, dt=10.0, timestamp=float(i * 10))
-        for i in range(n)
-    ]
+    samples = [InputSample(dx=1.0, dy=0.5, dt=10.0, timestamp=float(i * 10)) for i in range(n)]
     return InputTrajectory(samples=samples, session_id="ai")
 
 
@@ -58,7 +56,7 @@ def test_analyze_session_score_over_time_length():
     trajs = [_make_traj() for _ in range(4)]
     result = analyze_session("s", trajs)
     assert len(result.score_over_time) == 4
-    for idx, score in result.score_over_time:
+    for _idx, score in result.score_over_time:
         assert 0.0 <= score <= 1.0
 
 

@@ -1,9 +1,7 @@
 """Tests for humanproof.batch module."""
-import csv
-import tempfile
-from pathlib import Path
 
-import pytest
+import csv
+from pathlib import Path
 
 from humanproof.batch import BatchScoreResult, batch_score, score_from_csv
 from humanproof.trajectory import InputSample, InputTrajectory
@@ -12,6 +10,7 @@ from humanproof.trajectory import InputSample, InputTrajectory
 def _make_traj(noise_level: float = 0.5, n: int = 20) -> InputTrajectory:
     """Create a trajectory with controlled noise."""
     import math
+
     samples = []
     for i in range(n):
         dx = math.sin(i * 0.3) * noise_level + (0.1 if i % 3 == 0 else 0)
@@ -64,9 +63,13 @@ def test_score_from_csv(tmp_path: Path):
         writer.writeheader()
         # Two trajectories with 5 points each
         for i in range(5):
-            writer.writerow({"trajectory_id": "traj1", "t": i * 10, "x": i * 2.0, "y": i * 1.5, "button": 0})
+            writer.writerow(
+                {"trajectory_id": "traj1", "t": i * 10, "x": i * 2.0, "y": i * 1.5, "button": 0}
+            )
         for i in range(5):
-            writer.writerow({"trajectory_id": "traj2", "t": i * 10, "x": i * 0.1, "y": i * 0.05, "button": 0})
+            writer.writerow(
+                {"trajectory_id": "traj2", "t": i * 10, "x": i * 0.1, "y": i * 0.05, "button": 0}
+            )
     result = score_from_csv(csv_file)
     assert isinstance(result, BatchScoreResult)
     assert len(result.scores) == 2
@@ -80,7 +83,9 @@ def test_score_from_csv_single_row_trajectory(tmp_path: Path):
         writer.writeheader()
         writer.writerow({"trajectory_id": "only_one", "t": 0, "x": 1, "y": 1, "button": 0})
         for i in range(5):
-            writer.writerow({"trajectory_id": "good", "t": i * 10, "x": i * 3.0, "y": i * 2.0, "button": 0})
+            writer.writerow(
+                {"trajectory_id": "good", "t": i * 10, "x": i * 3.0, "y": i * 2.0, "button": 0}
+            )
     result = score_from_csv(csv_file)
     # only 'good' trajectory should be scored
     assert len(result.scores) == 1

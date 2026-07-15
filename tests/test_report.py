@@ -91,6 +91,7 @@ def test_print_score_runs_without_error() -> None:
     from io import StringIO
 
     from rich.console import Console
+
     buf = StringIO()
     c = Console(file=buf, highlight=False)
     score = make_score()
@@ -103,6 +104,7 @@ def test_print_score_ai_verdict() -> None:
     from io import StringIO
 
     from rich.console import Console
+
     buf = StringIO()
     c = Console(file=buf, highlight=False)
     score = make_score("ai_traj", "ai", 0.1)

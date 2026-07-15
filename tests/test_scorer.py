@@ -15,6 +15,7 @@ def make_ai_traj() -> InputTrajectory:
 def make_human_traj() -> InputTrajectory:
     """Noisy trajectory with corrections (human-like)."""
     import random
+
     random.seed(42)
     samples = []
     for _i in range(20):

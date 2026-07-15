@@ -1,11 +1,10 @@
 """Tests for humanproof.calibration module."""
+
 import math
 
-import pytest
-
 from humanproof.calibration import (
-    CalibrationResult,
     CalibratedMotorScorer,
+    CalibrationResult,
     apply_calibration,
     calibrate,
 )
@@ -18,16 +17,15 @@ def _make_human_traj(n: int = 20) -> InputTrajectory:
     samples = []
     for i in range(n):
         noise = 0.6 if i % 2 == 0 else -0.4
-        samples.append(InputSample(dx=noise + 0.1, dy=noise - 0.1, dt=10.0, timestamp=float(i * 10)))
+        samples.append(
+            InputSample(dx=noise + 0.1, dy=noise - 0.1, dt=10.0, timestamp=float(i * 10))
+        )
     return InputTrajectory(samples=samples, session_id="human")
 
 
 def _make_ai_traj(n: int = 20) -> InputTrajectory:
     """Very smooth, constant trajectory (AI-like)."""
-    samples = [
-        InputSample(dx=1.0, dy=0.5, dt=10.0, timestamp=float(i * 10))
-        for i in range(n)
-    ]
+    samples = [InputSample(dx=1.0, dy=0.5, dt=10.0, timestamp=float(i * 10)) for i in range(n)]
     return InputTrajectory(samples=samples, session_id="ai")
 
 
@@ -162,10 +160,11 @@ def test_calibrate_ai_predicted_as_human():
     """Cover the branch where AI trajectory is predicted as human in _evaluate."""
     # Use very permissive thresholds so AI trajs look human
     from humanproof.calibration import _evaluate
+
     ai = [_make_ai_traj() for _ in range(3)]
     human = [_make_human_traj() for _ in range(3)]
     # With very low noise_threshold, ai traj noise_ratio > threshold*2 → human_score += 0.2
-    acc, hp, ap = _evaluate(human, ai, noise_threshold=0.001, correction_threshold=0.001)
+    acc, _hp, _ap = _evaluate(human, ai, noise_threshold=0.001, correction_threshold=0.001)
     assert 0.0 <= acc <= 1.0
 
 
