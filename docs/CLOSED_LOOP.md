@@ -1,29 +1,33 @@
 # Closed loop — `humanproof`
 
-**Status:** stub (eagle-eyes Phase 0 / 2026-08-04)  
+**Status:** reader wired (eagle-eyes / 2026-08-05) — **APPROVAL-GATE**  
 **Owner loop:** L7
 
 ## Load-bearing job
 
-HITL checkpoints / approval gates (live product positioning)
+HITL checkpoints / approval gates before high-risk side effects
 
 ## Who reads the output?
 
-Runtime gate blocks until approval
+- Library API: `humanproof.gate_approval` / `assert_approved` / `ApprovalSession` (`closed_loop.py`)
+- CI / agent runtime / publish loop must `sys.exit(outcome.exit_code)` or refuse on `ok is False`
+- eagle-eyes dogfood may import the gate without a full gaming scorer stack
 
 ## What outcome changes?
 
-High-risk action does not proceed without human
+High-risk action (`post`, `db_wipe`, …) does not proceed without a valid owner
+token; missing token → `FAIL_LOUD` (exit 2). Runaway budget → `FAIL` (exit 1).
 
 ## When NOT to use (anti-ornament)
 
-Do not load as decorative MCP without wiring to real block
+Do not load as decorative MCP without wiring to real block. Do not auto-mint
+tokens inside the agent process for “convenience.”
 
 ## Non-Ornament checklist
 
-- [ ] Reader implemented in CI, gate, or eagle-eyes script
-- [ ] Empty/wrong output fails loudly
-- [ ] Not exposed as free MCP in product agents
+- [x] Reader implemented in CI, gate, or eagle-eyes script (`gate_approval` + tests)
+- [x] Empty/wrong output fails loudly (`FAIL_LOUD`, exit 2)
+- [x] Not exposed as free MCP that auto-approves
 - [ ] Linked gap IDs in mem0 when improving
 
 ## Related failures (farm memory)
