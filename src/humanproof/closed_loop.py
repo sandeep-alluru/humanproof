@@ -1,12 +1,14 @@
-"""Closed-loop approval gate for humanproof (Non-Ornament L7 / APPROVAL-GATE).
+"""Closed-loop approval gate for humanproof (APPROVAL-GATE + MASS-EMAIL).
 
 Who reads the output?
   CI jobs, agent runtimes, publish loops, eagle-eyes dogfood — anything that
-  must *block* a high-risk action until a human issues an approval token.
+  must *block* a high-risk action until a human issues an approval token, and
+  must block bulk external side effects (OpenClaw mass email class).
 
 What outcome changes?
   Without a valid, unconsumed token for a high-risk action, the gate returns
   FAIL_LOUD (exit 2) or FAIL (exit 1). The action must not proceed.
+  Mass email/delete without recipient inventory or over bulk limits → FAIL_LOUD.
 
 Farm cases:
   * APPROVAL-GATE — X-lane auto-post without owner (FULLAUTO flag removed the
@@ -25,7 +27,7 @@ import hashlib
 import secrets
 import time
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any, Iterable, Sequence
 
 # Action names / prefixes that always require approval (destructive / external).
 DEFAULT_HIGH_RISK_ACTIONS: frozenset[str] = frozenset(
@@ -40,6 +42,9 @@ DEFAULT_HIGH_RISK_ACTIONS: frozenset[str] = frozenset(
         "truncate",
         "send_email",
         "mass_email",
+        "mass_delete",
+        "bulk_email",
+        "bulk_delete",
         "transfer",
         "deploy_prod",
         "git_push_force",
@@ -49,6 +54,21 @@ DEFAULT_HIGH_RISK_ACTIONS: frozenset[str] = frozenset(
     }
 )
 
+# Actions that are bulk external side effects (OpenClaw class).
+DEFAULT_MASS_ACTIONS: frozenset[str] = frozenset(
+    {
+        "mass_email",
+        "bulk_email",
+        "mass_delete",
+        "bulk_delete",
+        "mass_send",
+        "send_email",  # single-send still needs inventory when multi-recipient
+    }
+)
+
+DEFAULT_MAX_RECIPIENTS: int = 50
+DEFAULT_MAX_MASS_ACTIONS_PER_SESSION: int = 3
+
 
 class ApprovalError(ValueError):
     """Raised when an action is refused for missing/invalid approval."""
@@ -56,7 +76,7 @@ class ApprovalError(ValueError):
 
 @dataclass(frozen=True)
 class GateOutcome:
-    """Result of an approval gate check.
+    """Result of an approval or mass-action gate check.
 
     Attributes:
         ok: True only when the action may proceed.
@@ -68,6 +88,8 @@ class GateOutcome:
         human_required: True when a human must issue a token.
         token_id: Consumed or matched token id when present.
         approvals_remaining: Budget remaining in the session after this check.
+        recipient_count: Recipients / targets in a mass-action gate.
+        mass_action_count: Mass actions already passed this session.
     """
 
     ok: bool
@@ -79,6 +101,8 @@ class GateOutcome:
     human_required: bool = False
     token_id: str | None = None
     approvals_remaining: int | None = None
+    recipient_count: int = 0
+    mass_action_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -91,6 +115,8 @@ class GateOutcome:
             "human_required": self.human_required,
             "token_id": self.token_id,
             "approvals_remaining": self.approvals_remaining,
+            "recipient_count": self.recipient_count,
+            "mass_action_count": self.mass_action_count,
         }
 
 
@@ -146,6 +172,8 @@ class ApprovalSession:
         *,
         high_risk_actions: Iterable[str] | None = None,
         max_high_risk_per_session: int | None = None,
+        max_mass_actions_per_session: int | None = DEFAULT_MAX_MASS_ACTIONS_PER_SESSION,
+        max_recipients_per_mass: int = DEFAULT_MAX_RECIPIENTS,
         session_id: str | None = None,
     ) -> None:
         base = set(DEFAULT_HIGH_RISK_ACTIONS)
@@ -153,9 +181,12 @@ class ApprovalSession:
             base |= {_canonical_action(a) for a in high_risk_actions}
         self.high_risk_actions: frozenset[str] = frozenset(base)
         self.max_high_risk_per_session = max_high_risk_per_session
+        self.max_mass_actions_per_session = max_mass_actions_per_session
+        self.max_recipients_per_mass = max_recipients_per_mass
         self.session_id = session_id or secrets.token_hex(4)
         self._tokens: dict[str, ApprovalToken] = {}
         self._high_risk_passes: int = 0
+        self._mass_action_passes: int = 0
 
     def classify(self, action: str) -> str:
         """Return ``high_risk`` or ``safe`` for *action*."""
@@ -207,10 +238,23 @@ class ApprovalSession:
     def high_risk_pass_count(self) -> int:
         return self._high_risk_passes
 
+    @property
+    def mass_action_pass_count(self) -> int:
+        return self._mass_action_passes
+
     def remaining_budget(self) -> int | None:
         if self.max_high_risk_per_session is None:
             return None
         return max(0, self.max_high_risk_per_session - self._high_risk_passes)
+
+    def remaining_mass_budget(self) -> int | None:
+        if self.max_mass_actions_per_session is None:
+            return None
+        return max(0, self.max_mass_actions_per_session - self._mass_action_passes)
+
+    def record_mass_pass(self) -> None:
+        """Increment mass-action counter after a successful mass gate."""
+        self._mass_action_passes += 1
 
 
 def _canonical_action(action: str) -> str:
@@ -224,6 +268,9 @@ def _fail_loud(
     risk: str | None = None,
     human_required: bool = True,
     remaining: int | None = None,
+    recipient_count: int = 0,
+    mass_action_count: int = 0,
+    token_id: str | None = None,
 ) -> GateOutcome:
     return GateOutcome(
         ok=False,
@@ -233,8 +280,10 @@ def _fail_loud(
         action=action,
         risk=risk,
         human_required=human_required,
-        token_id=None,
+        token_id=token_id,
         approvals_remaining=remaining,
+        recipient_count=recipient_count,
+        mass_action_count=mass_action_count,
     )
 
 
@@ -246,6 +295,8 @@ def _fail(
     human_required: bool = True,
     token_id: str | None = None,
     remaining: int | None = None,
+    recipient_count: int = 0,
+    mass_action_count: int = 0,
 ) -> GateOutcome:
     return GateOutcome(
         ok=False,
@@ -257,6 +308,8 @@ def _fail(
         human_required=human_required,
         token_id=token_id,
         approvals_remaining=remaining,
+        recipient_count=recipient_count,
+        mass_action_count=mass_action_count,
     )
 
 
@@ -424,3 +477,180 @@ def require_token_for(
     Useful in tests and CI to prove the unattended path is blocked.
     """
     return gate_approval(action, token=None, session=session)
+
+
+# ---------------------------------------------------------------------------
+# MASS-EMAIL / OpenClaw — bulk external side effects
+# ---------------------------------------------------------------------------
+
+
+def is_mass_action(action: str) -> bool:
+    """True if *action* is a bulk external side effect (email/delete class)."""
+    canon = _canonical_action(action)
+    if not canon:
+        return False
+    if canon in DEFAULT_MASS_ACTIONS:
+        return True
+    head = canon.split(":", 1)[0]
+    return head in DEFAULT_MASS_ACTIONS
+
+
+def _recipient_list(recipients: Sequence[str] | None) -> list[str]:
+    if recipients is None:
+        return []
+    out: list[str] = []
+    seen: set[str] = set()
+    for r in recipients:
+        s = str(r).strip()
+        if s and s not in seen:
+            seen.add(s)
+            out.append(s)
+    return out
+
+
+def gate_mass_action(
+    action: str,
+    recipients: Sequence[str] | None = None,
+    *,
+    token: ApprovalToken | str | None = None,
+    session: ApprovalSession | None = None,
+    secret: str | None = None,
+    max_recipients: int | None = None,
+    require_inventory: bool = True,
+    consume: bool = True,
+) -> GateOutcome:
+    """Block unattended bulk email/delete (OpenClaw mass-email class).
+
+    Load-bearing controls:
+
+    1. **Classify** — action must be mass/bulk class (or still go through
+       :func:`gate_approval` if high-risk single).
+    2. **Inventory** — named recipients/targets required when
+       ``require_inventory`` (empty list → FAIL_LOUD).
+    3. **Bulk limit** — recipient count over session/default max without a
+       valid approval token → FAIL_LOUD.
+    4. **Approval** — always requires human token via :func:`gate_approval`
+       for mass actions (never unattended).
+    5. **Session mass budget** — max mass actions per session (AgentWatch class).
+
+    Args:
+        action: e.g. ``mass_email``, ``send_email``, ``mass_delete``.
+        recipients: Explicit list of email addresses / targets / ids.
+        token: Human approval token (required for mass actions).
+        session: Approval session (mass + high-risk budgets).
+        secret: Optional secret when *token* is a token_id string.
+        max_recipients: Override max recipients (default session or 50).
+        require_inventory: If True, empty recipients FAIL_LOUD.
+        consume: Pass-through to :func:`gate_approval` on success path.
+    """
+    canon = _canonical_action(action)
+    sess = session or ApprovalSession()
+    recips = _recipient_list(recipients)
+    n = len(recips)
+    mass_count = sess.mass_action_pass_count
+    limit = (
+        max_recipients
+        if max_recipients is not None
+        else getattr(sess, "max_recipients_per_mass", DEFAULT_MAX_RECIPIENTS)
+    )
+
+    if not canon:
+        return _fail_loud(
+            "MASS-EMAIL: empty action — cannot gate phantom bulk side effect",
+            action=None,
+            risk="high_risk",
+            recipient_count=n,
+            mass_action_count=mass_count,
+        )
+
+    if not is_mass_action(canon):
+        # Non-mass: fall through to standard approval gate.
+        return gate_approval(
+            canon, token, session=sess, secret=secret, consume=consume
+        )
+
+    if require_inventory and n == 0:
+        return _fail_loud(
+            f"MASS-EMAIL/OpenClaw: mass action {canon!r} without recipient "
+            f"inventory — agent must name targets before bulk send/delete",
+            action=canon,
+            risk="high_risk",
+            recipient_count=0,
+            mass_action_count=mass_count,
+        )
+
+    if n > limit:
+        return _fail_loud(
+            f"MASS-EMAIL/OpenClaw: recipient_count={n} exceeds max={limit} "
+            f"for {canon!r} — refuse bulk external side effect "
+            f"(public: OpenClaw mass email delete class)",
+            action=canon,
+            risk="high_risk",
+            recipient_count=n,
+            mass_action_count=mass_count,
+        )
+
+    # Session mass budget (runaway bulk loops).
+    if sess.max_mass_actions_per_session is not None:
+        if sess.mass_action_pass_count >= sess.max_mass_actions_per_session:
+            return _fail(
+                f"MASS-EMAIL: session mass-action budget exhausted "
+                f"({sess.mass_action_pass_count}/{sess.max_mass_actions_per_session}) "
+                f"— re-approval required (AgentWatch/Guardian class)",
+                action=canon,
+                risk="high_risk",
+                recipient_count=n,
+                mass_action_count=mass_count,
+            )
+
+    # Always require human approval for mass actions.
+    auth = gate_approval(canon, token, session=sess, secret=secret, consume=consume)
+    if not auth.ok:
+        return GateOutcome(
+            ok=False,
+            verdict=auth.verdict,
+            reason=(
+                f"MASS-EMAIL/OpenClaw: {auth.reason} "
+                f"(recipients={n} action={canon!r})"
+            ),
+            exit_code=auth.exit_code,
+            action=canon,
+            risk="high_risk",
+            human_required=True,
+            token_id=auth.token_id,
+            approvals_remaining=auth.approvals_remaining,
+            recipient_count=n,
+            mass_action_count=mass_count,
+        )
+
+    if consume:
+        sess.record_mass_pass()
+
+    return GateOutcome(
+        ok=True,
+        verdict="PASS",
+        reason=(
+            f"mass action authorised: action={canon!r} recipients={n} "
+            f"token={auth.token_id} mass_count={sess.mass_action_pass_count}"
+        ),
+        exit_code=0,
+        action=canon,
+        risk="high_risk",
+        human_required=False,
+        token_id=auth.token_id,
+        approvals_remaining=auth.approvals_remaining,
+        recipient_count=n,
+        mass_action_count=sess.mass_action_pass_count,
+    )
+
+
+def assert_mass_action_ok(
+    action: str,
+    recipients: Sequence[str] | None = None,
+    **kwargs: Any,
+) -> GateOutcome:
+    """Raise :class:`ApprovalError` unless :func:`gate_mass_action` is ok."""
+    outcome = gate_mass_action(action, recipients, **kwargs)
+    if not outcome.ok:
+        raise ApprovalError(f"{outcome.verdict}: {outcome.reason}")
+    return outcome

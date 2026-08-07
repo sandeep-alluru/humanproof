@@ -52,8 +52,54 @@ and refuse when `ok is False`. A flag file alone is not a closed loop.
 
 ---
 
+## Case MASS-EMAIL — OpenClaw bulk external side effects
+
+**Source:** Matrix public corpus **partial** until this ship + Track B
+(`20260807T081227Z` Guardian/AgentWatch runaway class):
+
+| Incident | Failure class |
+|----------|---------------|
+| OpenClaw mass email delete | Bulk external side effect without inventory/gate |
+| Guardian Runtime (HN) | Local firewall / cost runaway |
+| AgentWatch (HN) | Session budget before re-approval |
+
+**What fails:**
+
+1. Agents call `mass_email` / `send_email` / `mass_delete` with **empty**
+   recipient lists (or no list) and still claim success.
+2. Oversized recipient blasts exceed any human-intended bulk limit.
+3. Session loops mass actions until spam/delete damage is done — only a
+   single high-risk token budget was not enough without a **mass** budget.
+
+**Product in this repo:**
+
+| Control | API |
+|---------|-----|
+| Classifier | `is_mass_action(action)` / `DEFAULT_MASS_ACTIONS` |
+| Pre-exec gate | `gate_mass_action(action, recipients, token=..., session=...)` |
+| Inventory | empty recipients → **FAIL_LOUD** |
+| Bulk max | `max_recipients` / `ApprovalSession.max_recipients_per_mass` |
+| Mass budget | `max_mass_actions_per_session` (default 3) |
+| Raise form | `assert_mass_action_ok(...)` |
+
+**Rules (load-bearing):**
+
+- Mass action + empty inventory → **FAIL_LOUD**
+- recipient_count > max → **FAIL_LOUD**
+- No approval token → **FAIL_LOUD** (via `gate_approval`)
+- Mass session budget exhausted → **FAIL**
+- Non-mass actions fall through to `gate_approval`
+
+**Tests:** `tests/test_mass_email_gate.py`
+
+**Non-Ornament:** Call `gate_mass_action` **before** any bulk email/delete tool.
+Pair with `gate_approval` tokens issued only by humans. High-risk defaults alone
+are not a full OpenClaw fixture — inventory + bulk + mass budget are.
+
 ## Related queue IDs
 
 - **APPROVAL-GATE** — this case (P0)
+- **MASS-EMAIL** — OpenClaw bulk fixture (this section)
 - **NORM-ENFORCE** (normsync) — unattended post without norm (sibling)
 - **SILENT-SUCCESS** (notarize/groundcrew) — success without effects
+- **DB-WIPE** (groundcrew) — destructive SQL/shell inventory + approval

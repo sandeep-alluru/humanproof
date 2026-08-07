@@ -12,12 +12,17 @@ from humanproof.calibration import (
     calibrate,
 )
 from humanproof.closed_loop import (
+    DEFAULT_MASS_ACTIONS,
+    DEFAULT_MAX_RECIPIENTS,
     ApprovalError,
     ApprovalSession,
     ApprovalToken,
     GateOutcome,
     assert_approved,
+    assert_mass_action_ok,
     gate_approval,
+    gate_mass_action,
+    is_mass_action,
     require_token_for,
 )
 from humanproof.scorer import MotorFeatures, MotorScore, MotorScorer
@@ -33,6 +38,8 @@ __all__ = [
     "BatchScoreResult",
     "CalibratedMotorScorer",
     "CalibrationResult",
+    "DEFAULT_MASS_ACTIONS",
+    "DEFAULT_MAX_RECIPIENTS",
     "GateOutcome",
     "InputSample",
     "InputTrajectory",
@@ -43,10 +50,13 @@ __all__ = [
     "analyze_session",
     "apply_calibration",
     "assert_approved",
+    "assert_mass_action_ok",
     "batch_score",
     "calibrate",
     "detect_shift",
     "gate_approval",
+    "gate_mass_action",
+    "is_mass_action",
     "require_token_for",
     "score_from_csv",
 ]
