@@ -1,4 +1,4 @@
-"""APPROVAL-GATE — high-risk actions require owner token (not auto-pass).
+"""APPROVAL-GATE - high-risk actions require owner token (not auto-pass).
 
 Farm: X-lane FULL AUTO-POST removed the 1-tap gate (Qdrant decision).
 Public: Replit DB wipe / Antigravity / Guardian Runtime / AgentWatch.
@@ -43,7 +43,7 @@ def test_post_without_token_fails_loud() -> None:
 
 
 def test_db_wipe_without_token_fails_loud() -> None:
-    """Public Replit / Antigravity class — destructive without human."""
+    """Public Replit / Antigravity class - destructive without human."""
     out = gate_approval("db_wipe", token=None)
     assert out.verdict == "FAIL_LOUD"
     assert out.ok is False

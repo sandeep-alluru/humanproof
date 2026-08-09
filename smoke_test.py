@@ -17,7 +17,6 @@ import importlib
 import json
 import subprocess
 import sys
-import tempfile
 import traceback
 from pathlib import Path
 
@@ -53,7 +52,7 @@ def section(title: str) -> None:
     print(f"\n{BOLD}{title}{RESET}")
 
 
-def run(name: str, fn):  # noqa: ANN001
+def run(name: str, fn):
     try:
         fn()
         ok(name)
@@ -135,6 +134,7 @@ def _test_api_import():
 
 def _test_api_health():
     from fastapi.testclient import TestClient
+
     from humanproof.api import app
     client = TestClient(app)
     r = client.get("/health")
@@ -214,7 +214,7 @@ run("CODEX.md exists and non-empty", lambda: _check_file_nonempty("CODEX.md"))
 run(".github/copilot-instructions.md exists", lambda: _check_file_nonempty(".github/copilot-instructions.md"))
 def _test_cursor_rules():
     mdc_files = list((REPO_ROOT / ".cursor/rules").glob("*.mdc"))
-    assert len(mdc_files) >= 1, f"Expected ≥1 .mdc file in .cursor/rules/, found none"
+    assert len(mdc_files) >= 1, "Expected ≥1 .mdc file in .cursor/rules/, found none"
 
 run(".cursor/rules/ has at least one .mdc file", _test_cursor_rules)
 run(".windsurfrules exists", lambda: _check_file_nonempty(".windsurfrules"))

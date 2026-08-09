@@ -1,4 +1,4 @@
-"""Session-level analysis for humanproof — detect behavioral shifts (e.g. aimbot activation)."""
+"""Session-level analysis for humanproof - detect behavioral shifts (e.g. aimbot activation)."""
 
 from __future__ import annotations
 

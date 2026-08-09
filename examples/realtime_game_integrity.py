@@ -312,8 +312,8 @@ def main() -> None:
     print("    X0-BOT:  noise_ratio≈0.00, correction_rate≈0.00 — classic aimbot signature")
     print("    EkoBOT:  injected dx/dy noise raises noise_ratio slightly, but correction_rate")
     print("             stays near 0.00 (no direction reversals injected) — still flagged")
-    print(f"\n  The 3-strike rule reduces effective false positive rate from 0.1% per window")
-    print(f"  to ~0.000001% per session (p=0.001^3 for three consecutive false flags).")
+    print("\n  The 3-strike rule reduces effective false positive rate from 0.1% per window")
+    print("  to ~0.000001% per session (p=0.001^3 for three consecutive false flags).")
     print(f"\n{'=' * 76}\n")
 
 

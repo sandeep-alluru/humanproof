@@ -81,7 +81,7 @@ def test_apply_calibration_scores_trajectory():
 
 
 def test_calibrate_with_empty_ai():
-    """Calibrate with no AI samples — should still return a result."""
+    """Calibrate with no AI samples - should still return a result."""
     human = [_make_human_traj() for _ in range(3)]
     result = calibrate(human, [])
     assert isinstance(result, CalibrationResult)

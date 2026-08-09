@@ -61,7 +61,7 @@ def test_analyze_session_score_over_time_length():
 
 
 def test_analyze_session_consistent_human():
-    # All similar trajectories — no behavioral shift should be detected
+    # All similar trajectories - no behavioral shift should be detected
     trajs = [_make_traj(noise=0.8) for _ in range(6)]
     result = analyze_session("human_session", trajs)
     # Consistent trajectories: no shift detected regardless of human/ai verdict

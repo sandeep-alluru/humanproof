@@ -45,7 +45,7 @@ def _move_human(
     for step in range(steps):
         # Ease-in-out curve factor
         t = step / steps
-        ease = t * t * (3 - 2 * t)
+        t * t * (3 - 2 * t)
         # Gaussian noise on each micro-step
         noise_x = rng.gauss(0, 3.5)
         noise_y = rng.gauss(0, 3.0)
@@ -191,7 +191,7 @@ def main() -> None:
         print(f"  smoothness:       {f.smoothness:.2f}   (human <5.0, bot >8.0)")
         print(f"  mean_speed:       {f.mean_speed:.4f} px/ms")
         print(f"  Anomaly flags:    {', '.join(score.flags) if score.flags else 'none'}")
-        print(f"  --")
+        print("  --")
         print(f"  Verdict:          {verdict_label}  ({verdict_conf * 100:.0f}% confidence)")
 
     # ── Side-by-side discriminating features ─────────────────────────────────

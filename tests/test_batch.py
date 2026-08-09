@@ -76,7 +76,7 @@ def test_score_from_csv(tmp_path: Path):
 
 
 def test_score_from_csv_single_row_trajectory(tmp_path: Path):
-    """A trajectory with only 1 row produces 0 samples — should be skipped gracefully."""
+    """A trajectory with only 1 row produces 0 samples - should be skipped gracefully."""
     csv_file = tmp_path / "single.csv"
     with csv_file.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["trajectory_id", "t", "x", "y", "button"])

@@ -131,9 +131,7 @@ def build_window_trajectories(profile: PlayerProfile) -> list[tuple[str, InputTr
         count = WINDOW_MINUTES * SAMPLES_PER_MINUTE
 
         # Determine behavior in this window
-        if profile.skill == "aimbot":
-            samps = make_bot_samples(count, ts)
-        elif profile.skill == "hybrid" and window_start >= 8:
+        if profile.skill == "aimbot" or (profile.skill == "hybrid" and window_start >= 8):
             samps = make_bot_samples(count, ts)
         elif profile.skill == "hybrid":
             samps = make_human_samples(rng, count, profile.noise_std, ts)
@@ -252,20 +250,20 @@ def main() -> None:
 
         print(f"  {profile.player_id.upper()} ({profile.name})")
         if profile.player_id in behavior_change_flagged:
-            print(f"    Confidence:  HIGH — timeline behavior change detected")
+            print("    Confidence:  HIGH — timeline behavior change detected")
             print(f"    Full-match noise_ratio: {score_entry.features.noise_ratio:.4f} "
                   f"(averaged, masks window-level change)")
             print(
-                f"    Timeline note: human-like play until minute 8, then "
-                f"noise_ratio dropped from ~0.68 to ~0.00 — aimbot activation suspected"
+                "    Timeline note: human-like play until minute 8, then "
+                "noise_ratio dropped from ~0.68 to ~0.00 — aimbot activation suspected"
             )
         else:
             print(f"    Confidence:  {conf:.0f}% AI/bot (full-match)")
             print(f"    noise_ratio: {score_entry.features.noise_ratio:.4f} (threshold: <0.15)")
             print(f"    Anomaly flags: {', '.join(score_entry.flags)}")
-        print(f"    Recommended action: DISQUALIFY + refer to anti-cheat committee\n")
+        print("    Recommended action: DISQUALIFY + refer to anti-cheat committee\n")
 
-    print(f"  Legitimate players: ", end="")
+    print("  Legitimate players: ", end="")
     flagged_ids = {fp.player_id for fp in flagged_players}
     human_names = [p.name for p in PLAYERS if p.player_id not in flagged_ids]
     print(", ".join(human_names))

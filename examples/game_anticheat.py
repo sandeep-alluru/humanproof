@@ -9,7 +9,6 @@ Run from repo root:
 
 from __future__ import annotations
 
-import math
 import random
 import sys
 from pathlib import Path
@@ -159,7 +158,7 @@ def main() -> None:
             print(f"    correction_rate: {score.features.correction_rate:.4f}  (human baseline: 0.15-0.35)")
             print(f"    smoothness:      {score.features.smoothness:.2f}  (human baseline: <5.0)")
             print(f"    Anomaly flags:   {', '.join(score.flags) if score.flags else 'none'}")
-            print(f"    Action:          ACCOUNT SUSPENDED — pending manual review")
+            print("    Action:          ACCOUNT SUSPENDED — pending manual review")
         print()
 
     print_separator("=")

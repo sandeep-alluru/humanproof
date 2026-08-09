@@ -1,8 +1,8 @@
 """MASS-EMAIL / OpenClaw bulk external side-effect gate.
 
 Public cases (Track B + matrix partial):
-  * OpenClaw mass email delete — external side effect without gate
-  * Guardian Runtime / AgentWatch — runaway bulk budget (HN 20260807T081227Z)
+  * OpenClaw mass email delete - external side effect without gate
+  * Guardian Runtime / AgentWatch - runaway bulk budget (HN 20260807T081227Z)
 
 Pre-fix hole: mass_email only marked high-risk; agents can still attempt
 bulk send with empty/oversized recipient lists or loop mass actions.
@@ -117,7 +117,7 @@ def test_assert_mass_action_ok_passes() -> None:
 
 
 def test_non_mass_falls_through_to_approval() -> None:
-    """score is not mass — should use standard gate (safe path)."""
+    """score is not mass - should use standard gate (safe path)."""
     out = gate_mass_action("score", recipients=None, token=None)
     assert out.ok is True
     assert out.risk == "safe" or out.verdict == "PASS"

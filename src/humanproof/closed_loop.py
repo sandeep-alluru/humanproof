@@ -1,7 +1,7 @@
 """Closed-loop approval gate for humanproof (APPROVAL-GATE + MASS-EMAIL).
 
 Who reads the output?
-  CI jobs, agent runtimes, publish loops, eagle-eyes dogfood — anything that
+  CI jobs, agent runtimes, publish loops, eagle-eyes dogfood - anything that
   must *block* a high-risk action until a human issues an approval token, and
   must block bulk external side effects (OpenClaw mass email class).
 
@@ -11,11 +11,11 @@ What outcome changes?
   Mass email/delete without recipient inventory or over bulk limits → FAIL_LOUD.
 
 Farm cases:
-  * APPROVAL-GATE — X-lane auto-post without owner (FULLAUTO flag removed the
+  * APPROVAL-GATE - X-lane auto-post without owner (FULLAUTO flag removed the
     1-tap gate; product library must still provide a required-token gate).
   * Public: Replit AI DB deletion, Google Antigravity wipe, OpenClaw mass
-    email delete — destructive tools without human approval.
-  * Public (HN): Guardian Runtime, AgentWatch — runaway / budget firewalls
+    email delete - destructive tools without human approval.
+  * Public (HN): Guardian Runtime, AgentWatch - runaway / budget firewalls
     map to max high-risk actions per session before re-approval.
 
 Never treat a missing token as PASS. Never auto-mint tokens for agents.
@@ -26,8 +26,9 @@ from __future__ import annotations
 import hashlib
 import secrets
 import time
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 # Action names / prefixes that always require approval (destructive / external).
 DEFAULT_HIGH_RISK_ACTIONS: frozenset[str] = frozenset(
@@ -152,7 +153,7 @@ class ApprovalToken:
         return self.action == _canonical_action(action)
 
     def fingerprint(self) -> str:
-        """Public id for logs — not the secret."""
+        """Public id for logs - not the secret."""
         return self.token_id
 
 
@@ -164,7 +165,7 @@ class ApprovalSession:
       * single-use (or capped) consumption
       * optional runaway budget (max high-risk successes per session)
 
-    This is the load-bearing *reader* for APPROVAL-GATE — not a flag file.
+    This is the load-bearing *reader* for APPROVAL-GATE - not a flag file.
     """
 
     def __init__(
@@ -339,7 +340,7 @@ def gate_approval(
 
     if not canon:
         return _fail_loud(
-            "empty action — refuse (APPROVAL-GATE: nothing to approve)",
+            "empty action - refuse (APPROVAL-GATE: nothing to approve)",
             action=action or "",
             risk="high_risk",
             remaining=remaining,
@@ -351,7 +352,7 @@ def gate_approval(
         return GateOutcome(
             ok=True,
             verdict="PASS",
-            reason=f"safe action {canon!r} — no approval required",
+            reason=f"safe action {canon!r} - no approval required",
             exit_code=0,
             action=canon,
             risk="safe",
@@ -425,17 +426,19 @@ def gate_approval(
         )
 
     # Runaway budget (Guardian / AgentWatch class)
-    if sess.max_high_risk_per_session is not None:
-        if sess.high_risk_pass_count >= sess.max_high_risk_per_session:
-            return _fail(
-                f"session high-risk budget exhausted "
-                f"({sess.high_risk_pass_count}/{sess.max_high_risk_per_session}) "
-                f"— re-approval required (runaway guard)",
-                action=canon,
-                risk="high_risk",
-                token_id=tok.token_id,
-                remaining=0,
-            )
+    if (
+        sess.max_high_risk_per_session is not None
+        and sess.high_risk_pass_count >= sess.max_high_risk_per_session
+    ):
+        return _fail(
+            f"session high-risk budget exhausted "
+            f"({sess.high_risk_pass_count}/{sess.max_high_risk_per_session}) "
+            f"- re-approval required (runaway guard)",
+            action=canon,
+            risk="high_risk",
+            token_id=tok.token_id,
+            remaining=0,
+        )
 
     if consume:
         tok.uses += 1
@@ -472,7 +475,7 @@ def require_token_for(
     action: str,
     session: ApprovalSession,
 ) -> GateOutcome:
-    """Convenience: gate without a token — always FAIL_LOUD for high-risk.
+    """Convenience: gate without a token - always FAIL_LOUD for high-risk.
 
     Useful in tests and CI to prove the unattended path is blocked.
     """
@@ -480,7 +483,7 @@ def require_token_for(
 
 
 # ---------------------------------------------------------------------------
-# MASS-EMAIL / OpenClaw — bulk external side effects
+# MASS-EMAIL / OpenClaw - bulk external side effects
 # ---------------------------------------------------------------------------
 
 
@@ -523,15 +526,15 @@ def gate_mass_action(
 
     Load-bearing controls:
 
-    1. **Classify** — action must be mass/bulk class (or still go through
+    1. **Classify** - action must be mass/bulk class (or still go through
        :func:`gate_approval` if high-risk single).
-    2. **Inventory** — named recipients/targets required when
+    2. **Inventory** - named recipients/targets required when
        ``require_inventory`` (empty list → FAIL_LOUD).
-    3. **Bulk limit** — recipient count over session/default max without a
+    3. **Bulk limit** - recipient count over session/default max without a
        valid approval token → FAIL_LOUD.
-    4. **Approval** — always requires human token via :func:`gate_approval`
+    4. **Approval** - always requires human token via :func:`gate_approval`
        for mass actions (never unattended).
-    5. **Session mass budget** — max mass actions per session (AgentWatch class).
+    5. **Session mass budget** - max mass actions per session (AgentWatch class).
 
     Args:
         action: e.g. ``mass_email``, ``send_email``, ``mass_delete``.
@@ -556,7 +559,7 @@ def gate_mass_action(
 
     if not canon:
         return _fail_loud(
-            "MASS-EMAIL: empty action — cannot gate phantom bulk side effect",
+            "MASS-EMAIL: empty action - cannot gate phantom bulk side effect",
             action=None,
             risk="high_risk",
             recipient_count=n,
@@ -565,14 +568,12 @@ def gate_mass_action(
 
     if not is_mass_action(canon):
         # Non-mass: fall through to standard approval gate.
-        return gate_approval(
-            canon, token, session=sess, secret=secret, consume=consume
-        )
+        return gate_approval(canon, token, session=sess, secret=secret, consume=consume)
 
     if require_inventory and n == 0:
         return _fail_loud(
             f"MASS-EMAIL/OpenClaw: mass action {canon!r} without recipient "
-            f"inventory — agent must name targets before bulk send/delete",
+            f"inventory - agent must name targets before bulk send/delete",
             action=canon,
             risk="high_risk",
             recipient_count=0,
@@ -582,7 +583,7 @@ def gate_mass_action(
     if n > limit:
         return _fail_loud(
             f"MASS-EMAIL/OpenClaw: recipient_count={n} exceeds max={limit} "
-            f"for {canon!r} — refuse bulk external side effect "
+            f"for {canon!r} - refuse bulk external side effect "
             f"(public: OpenClaw mass email delete class)",
             action=canon,
             risk="high_risk",
@@ -591,17 +592,19 @@ def gate_mass_action(
         )
 
     # Session mass budget (runaway bulk loops).
-    if sess.max_mass_actions_per_session is not None:
-        if sess.mass_action_pass_count >= sess.max_mass_actions_per_session:
-            return _fail(
-                f"MASS-EMAIL: session mass-action budget exhausted "
-                f"({sess.mass_action_pass_count}/{sess.max_mass_actions_per_session}) "
-                f"— re-approval required (AgentWatch/Guardian class)",
-                action=canon,
-                risk="high_risk",
-                recipient_count=n,
-                mass_action_count=mass_count,
-            )
+    if (
+        sess.max_mass_actions_per_session is not None
+        and sess.mass_action_pass_count >= sess.max_mass_actions_per_session
+    ):
+        return _fail(
+            f"MASS-EMAIL: session mass-action budget exhausted "
+            f"({sess.mass_action_pass_count}/{sess.max_mass_actions_per_session}) "
+            f"- re-approval required (AgentWatch/Guardian class)",
+            action=canon,
+            risk="high_risk",
+            recipient_count=n,
+            mass_action_count=mass_count,
+        )
 
     # Always require human approval for mass actions.
     auth = gate_approval(canon, token, session=sess, secret=secret, consume=consume)
@@ -609,10 +612,7 @@ def gate_mass_action(
         return GateOutcome(
             ok=False,
             verdict=auth.verdict,
-            reason=(
-                f"MASS-EMAIL/OpenClaw: {auth.reason} "
-                f"(recipients={n} action={canon!r})"
-            ),
+            reason=(f"MASS-EMAIL/OpenClaw: {auth.reason} (recipients={n} action={canon!r})"),
             exit_code=auth.exit_code,
             action=canon,
             risk="high_risk",

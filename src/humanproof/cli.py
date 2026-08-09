@@ -21,7 +21,7 @@ console = Console()
 @click.group()
 @click.version_option(__version__, prog_name="humanproof")
 def main() -> None:
-    """humanproof — motor-noise fingerprinting for AI detection."""
+    """humanproof - motor-noise fingerprinting for AI detection."""
 
 
 @main.command()

@@ -1,4 +1,4 @@
-"""Calibration utilities — find optimal decision thresholds from labeled examples."""
+"""Calibration utilities - find optimal decision thresholds from labeled examples."""
 
 from __future__ import annotations
 

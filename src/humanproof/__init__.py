@@ -1,4 +1,4 @@
-"""humanproof — Motor-noise fingerprinting + HITL approval gates for agents."""
+"""humanproof - Motor-noise fingerprinting + HITL approval gates for agents."""
 
 from __future__ import annotations
 
@@ -32,14 +32,14 @@ from humanproof.trajectory import InputSample, InputTrajectory
 __version__ = _version("humanproof")
 
 __all__ = [
+    "DEFAULT_MASS_ACTIONS",
+    "DEFAULT_MAX_RECIPIENTS",
     "ApprovalError",
     "ApprovalSession",
     "ApprovalToken",
     "BatchScoreResult",
     "CalibratedMotorScorer",
     "CalibrationResult",
-    "DEFAULT_MASS_ACTIONS",
-    "DEFAULT_MAX_RECIPIENTS",
     "GateOutcome",
     "InputSample",
     "InputTrajectory",
