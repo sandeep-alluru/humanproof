@@ -45,7 +45,9 @@ def run_server() -> None:
         return [
             _mcp_types.Tool(
                 name="score_trajectory",
-                description="Score a single input trajectory for human vs AI likelihood.",
+                description=(
+                    "Score a single agent trajectory for human-likeness / policy compliance. Use after a run to decide if behavior is acceptable. For many runs at once use batch_score."
+                ),
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -59,7 +61,9 @@ def run_server() -> None:
             ),
             _mcp_types.Tool(
                 name="batch_score",
-                description="Score multiple input trajectories.",
+                description=(
+                    "Score multiple agent trajectories in one call. Use for eval suites. Prefer score_trajectory for interactive single-run feedback."
+                ),
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -73,7 +77,9 @@ def run_server() -> None:
             ),
             _mcp_types.Tool(
                 name="list_scores",
-                description="List all stored scores from the humanproof store.",
+                description=(
+                    "List previously stored trajectory scores. Use to review historical eval results without re-scoring. Read-only."
+                ),
                 inputSchema={"type": "object", "properties": {}},
             ),
         ]
